@@ -1,20 +1,12 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-# noqa: isort:skip_file, yapf: disable
-from .api import McpApi
-from .client import MCPClient
-
 """
-MCP (Model Context Protocol) integration for ModelScope.
+ModelScope MCP (Model Control Protocol) Package
 
-This package provides integration with the Model Context Protocol,
-allowing ModelScope to connect to and interact with MCP servers.
+- MCPApi: API client for ModelScope Hub MCP services
+- MCP: Unified interface for multi-server tool execution
 """
 
-__all__ = [
-    # API classes
-    'McpApi',
-    'MCPClient'
-    # Exception classes
-]
+from .api import MCPApi
+from .manager import MCP
 
-__version__ = '0.1.0'
+__all__ = ['MCPApi', 'MCP']

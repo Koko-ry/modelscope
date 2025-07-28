@@ -1,0 +1,34 @@
+2025-07-28 15:07:17,557 - modelscope - INFO - Starting MCP warmup process...
+2025-07-28 15:07:17,869 - modelscope - INFO - 🌐 Loaded 4 servers from ModelScope Hub (remote-only mode)
+2025-07-28 15:07:17,869 - modelscope - INFO - 🌐 Remote-only mode complete: 4 servers loaded
+2025-07-28 15:07:17,869 - modelscope - INFO - Final server count after deduplication: 4
+2025-07-28 15:07:17,871 - modelscope - INFO - SSE连接池初始化完成: max_connections=10, keep_alive=600s, idle_timeout=300s
+2025-07-28 15:07:17,871 - modelscope - INFO - SSE连接池初始化完成: max_connections=10, keep_alive=600s, idle_timeout=300s
+2025-07-28 15:07:17,871 - modelscope - INFO - SSE连接池初始化完成: max_connections=10, keep_alive=600s, idle_timeout=300s
+2025-07-28 15:07:17,872 - modelscope - INFO - 创建新SSE连接: https://mcp.api-inference.modelscope.net/1583ac5c690e4a/sse
+2025-07-28 15:07:17,872 - modelscope - INFO - 创建新SSE连接: https://mcp.api-inference.modelscope.net/f921fca397ed4b/sse
+2025-07-28 15:07:17,873 - modelscope - INFO - 创建新SSE连接: https://mcp.api-inference.modelscope.net/875439ca21354e/sse
+2025-07-28 15:07:18,590 - modelscope - INFO - SSE连接创建成功: https://mcp.api-inference.modelscope.net/1583ac5c690e4a/sse
+2025-07-28 15:07:18,591 - modelscope - INFO - SSE连接池健康检查任务启动
+2025-07-28 15:07:18,591 - modelscope - INFO - SSE连接池清理任务启动
+2025-07-28 15:07:18,725 - modelscope - INFO - SSE连接创建成功: https://mcp.api-inference.modelscope.net/875439ca21354e/sse
+2025-07-28 15:07:18,725 - modelscope - INFO - SSE连接创建成功: https://mcp.api-inference.modelscope.net/f921fca397ed4b/sse
+2025-07-28 15:07:18,725 - modelscope - INFO - SSE连接池健康检查任务启动
+2025-07-28 15:07:18,725 - modelscope - INFO - SSE连接池健康检查任务启动
+2025-07-28 15:07:18,725 - modelscope - INFO - SSE连接池清理任务启动
+2025-07-28 15:07:18,725 - modelscope - INFO - SSE连接池清理任务启动
+2025-07-28 15:07:48,593 - modelscope - ERROR - Failed to connect to server sse-mcp: Timed out while waiting for response to ClientRequest. Waited 30.0 seconds.
+2025-07-28 15:07:48,595 - modelscope - INFO - SSE连接池清理任务停止
+2025-07-28 15:07:48,595 - modelscope - INFO - SSE连接池健康检查任务停止
+2025-07-28 15:07:48,603 - modelscope - ERROR - Error discovering tools from amap-maps: Connection failed: Timed out while waiting for response to ClientRequest. Waited 30.0 seconds.
+2025-07-28 15:07:48,603 - modelscope - WARNING - No tools discovered from amap-maps
+2025-07-28 15:07:48,727 - modelscope - ERROR - Failed to connect to server sse-mcp: Timed out while waiting for response to ClientRequest. Waited 30.0 seconds.
+2025-07-28 15:07:48,727 - modelscope - ERROR - Failed to connect to server sse-mcp: Timed out while waiting for response to ClientRequest. Waited 30.0 seconds.
+2025-07-28 15:07:48,728 - modelscope - INFO - SSE连接池健康检查任务停止
+2025-07-28 15:07:48,728 - modelscope - INFO - SSE连接池清理任务停止
+2025-07-28 15:07:48,728 - modelscope - INFO - SSE连接池健康检查任务停止
+2025-07-28 15:07:48,728 - modelscope - INFO - SSE连接池清理任务停止
+2025-07-28 15:07:48,736 - modelscope - ERROR - Error discovering tools from mcp-server-weread: Connection failed: Timed out while waiting for response to ClientRequest. Waited 30.0 seconds.
+2025-07-28 15:07:48,736 - modelscope - WARNING - No tools discovered from mcp-server-weread
+2025-07-28 15:07:48,737 - modelscope - ERROR - Error discovering tools from 12306-mcp: Connection failed: Timed out while waiting for response to ClientRequest. Waited 30.0 seconds.
+2025-07-28 15:07:48,737 - modelscope - WARNING - No tools discovered from 12306-mcp

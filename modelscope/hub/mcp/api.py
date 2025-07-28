@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 import requests
 
-from modelscope.hub.api import HubApi
+from modelscope.hub.api import HubApi, ModelScopeConfig
 from modelscope.hub.errors import raise_for_http_status
 from modelscope.utils.logger import get_logger
 
@@ -36,7 +36,7 @@ class MCPApiResponseError(MCPApiError):
     pass
 
 
-class McpApi(HubApi):
+class MCPApi(HubApi):
     """
     MCP (Model Context Protocol) API interface class.
 
@@ -55,12 +55,13 @@ class McpApi(HubApi):
             ValueError: If base_api is not a valid HubApi instance
         """
 
-        super().__init__(base_api)
+        # Copy attributes from base_api instead of calling super().__init__()
         # Inherit HubApi's endpoint but add OpenAPI-specific path
         self.endpoint = base_api.endpoint + OPENAPI_PATH
         self.session = base_api.session
         self.builder_headers = base_api.builder_headers
         self.headers = base_api.headers
+        self.get_cookies = base_api.get_cookies
 
     def list_mcp_servers(self,
                          token: Optional[str] = None,
@@ -93,8 +94,8 @@ class McpApi(HubApi):
             {
                 'total_counts': 100,
                 'servers': [
-                    {'name': 'ServerA', 'description': 'This is a demo server for xxx.'},
-                    {'name': 'ServerB', 'description': 'This is another demo server.'},
+                    {'id': '@demo/ServerA', 'name': 'ServerA', 'description': 'This is a demo server for xxx.'},
+                    {'id': '@demo/ServerB', 'name': 'ServerB', 'description': 'This is another demo server.'},
                     ...
                 ]
             }
@@ -110,6 +111,14 @@ class McpApi(HubApi):
         url = f'{endpoint}/mcp/servers'
         headers = self.builder_headers(self.headers)
 
+        # Get cookies for authentication
+        cookies = ModelScopeConfig.get_cookies()
+        if cookies is None:
+            if token is None:
+                raise ValueError('Token does not exist, please login first.')
+            else:
+                cookies = self.get_cookies(token)
+
         # Only add Authorization header if token is provided
         if token:
             headers['Authorization'] = f'Bearer {token}'
@@ -122,7 +131,8 @@ class McpApi(HubApi):
         }
 
         try:
-            r = self.session.put(url, headers=headers, json=body)
+            r = self.session.put(
+                url, headers=headers, json=body, cookies=cookies)
             raise_for_http_status(r)
         except requests.exceptions.RequestException as e:
             logger.error(f'Failed to get MCP servers: {e}')
@@ -138,6 +148,7 @@ class McpApi(HubApi):
         data = resp.get('data', {})
         mcp_server_list = data.get('mcp_server_list', [])
         server_brief_list = [{
+            'id': item.get('id', ''),
             'name': item.get('name', ''),
             'description': item.get('description', '')
         } for item in mcp_server_list]
@@ -183,6 +194,14 @@ class McpApi(HubApi):
         url = f'{endpoint}/mcp/servers/operational'
         headers = self.builder_headers(self.headers)
 
+        # Get cookies for authentication
+        cookies = ModelScopeConfig.get_cookies()
+        if cookies is None:
+            if token is None:
+                raise ValueError('token is required')
+            else:
+                cookies = self.get_cookies(token)
+
         # Only add Authorization header if token is provided
         if token:
             headers['Authorization'] = f'Bearer {token}'
@@ -190,7 +209,7 @@ class McpApi(HubApi):
             raise ValueError('token is required')
 
         try:
-            r = self.session.get(url, headers=headers)
+            r = self.session.get(url, headers=headers, cookies=cookies)
             raise_for_http_status(r)
         except requests.exceptions.RequestException as e:
             logger.error(f'Failed to get operational MCP servers: {e}')
@@ -243,15 +262,13 @@ class McpApi(HubApi):
     def get_mcp_server(self,
                        server_id: str,
                        token: Optional[str] = None,
-                       get_operational_url: bool = False,
                        endpoint: Optional[str] = None) -> Dict[str, Any]:
         """
-        Get special MCP server information.
+        Get specific MCP server information.
 
         Args:
             server_id: ID of the MCP server
             token: Authentication token (optional)
-            get_operational_url: Whether to get operational URLs
             endpoint: API endpoint, defaults to MCP-specific endpoint
 
         Returns:
@@ -259,14 +276,14 @@ class McpApi(HubApi):
                 - name: server name
                 - description: server description
                 - id: server id
-                - mcp_servers: MCP server configuration(if get_operational_url is True)
+                - service_config: MCP server configuration(if token is provided)
 
         Example return:
             {
                 'name': 'ServerA',
                 'description': 'This is a demo server for xxx.',
                 'id': '@demo/serverA',
-                'mcp_servers'(if get_operational_url is True): {
+                'service_config'(if token is provided): {
                     'serverA': {
                         'type': 'sse',
                         'url': 'https://example.com/serverA/sse'
@@ -280,17 +297,29 @@ class McpApi(HubApi):
         if not endpoint:
             endpoint = self.endpoint
 
+        get_operational_url = False
+
         url = f'{endpoint}/mcp/servers/{server_id}'
         headers = self.builder_headers(self.headers)
 
+        # Get cookies for authentication
+        cookies = ModelScopeConfig.get_cookies()
+        if cookies is None:
+            if token is None:
+                raise ValueError('Token does not exist, please login first.')
+            else:
+                cookies = self.get_cookies(token)
+
         if token:
             headers['Authorization'] = f'Bearer {token}'
+            get_operational_url = True
 
         try:
             r = self.session.get(
                 url,
                 headers=headers,
-                params={'get_operational_url': get_operational_url})
+                params={'get_operational_url': get_operational_url},
+                cookies=cookies)
             raise_for_http_status(r)
         except requests.exceptions.RequestException as e:
             logger.error(f'Failed to get MCP server {server_id}: {e}')

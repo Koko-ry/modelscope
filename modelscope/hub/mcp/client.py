@@ -54,35 +54,222 @@ class MCPTimeoutError(MCPClientError):
 
 class MCPClient:
     """
-    MCP Client - A concise implementation based on the official MCP Python SDK
+    MCP Client - A comprehensive MCP (Model Context Protocol) client implementation
 
-    Simplest usage:
-    ```python
-    # 1. Create client
-    client = MCPClient(mcp_server={
-        "type": "sse",
-        "url": "https://example.com/sse"
-    })
+    This client provides a simple and robust interface for connecting to and interacting
+    with MCP servers using various transport protocols (STDIO, SSE, Streamable HTTP).
 
-    # 2. Connect and use
-    await client.connect()
-    tools = await client.list_tools()
-    result = await client.call_tool("tool_name", {"param": "value"})
-    await client.disconnect()
+    Supported Transport Types:
+        - stdio: Standard input/output communication with local processes
+        - sse: Server-Sent Events over HTTP
+        - streamable_http: Streamable HTTP transport
 
-    # Or use context manager (recommended)
-    async with MCPClient(mcp_server=config) as client:
-        tools = await client.list_tools()
-        result = await client.call_tool("tool_name", {"param": "value"})
-    ```
+    Basic Usage:
+        >>> import asyncio
+        >>> from modelscope.hub.mcp.client import MCPClient
+
+        >>> # 1. STDIO Transport (local process)
+        >>> stdio_config = {
+        ...     "type": "stdio",
+        ...     "command": ["python", "my_mcp_server.py"]
+        ... }
+        >>> client = MCPClient(stdio_config)
+
+        >>> # 2. SSE Transport (Server-Sent Events)
+        >>> sse_config = {
+        ...     "type": "sse",
+        ...     "url": "https://api.example.com/mcp/sse"
+        ... }
+        >>> client = MCPClient(sse_config)
+
+        >>> # 3. Streamable HTTP Transport
+        >>> http_config = {
+        ...     "type": "streamable_http",
+        ...     "url": "https://api.example.com/mcp/stream"
+        ... }
+        >>> client = MCPClient(http_config)
+
+    Context Manager Usage (Recommended):
+        >>> async def main():
+        ...     config = {"type": "sse", "url": "https://api.example.com/mcp/sse"}
+        ...
+        ...     async with MCPClient(config) as client:
+        ...         # Check connection status
+        ...         if client.is_connected():
+        ...             print(f"Connected to {client.get_server_name()}")
+        ...
+        ...         # List available tools
+        ...         tools = await client.list_tools()
+        ...         for tool in tools:
+        ...             print(f"Tool: {tool.name} - {tool.description}")
+        ...
+        ...         # Call a tool
+        ...         result = await client.call_tool("search", {"query": "Python"})
+        ...         print(f"Result: {result}")
+        ...
+        ...     # Client automatically disconnected
+        >>> asyncio.run(main())
+
+    Manual Connection Management:
+        >>> async def manual_connection():
+        ...     config = {"type": "sse", "url": "https://api.example.com/mcp/sse"}
+        ...     client = MCPClient(config)
+        ...
+        ...     try:
+        ...         # Connect to server
+        ...         await client.connect()
+        ...
+        ...         # Get server information
+        ...         server_info = client.get_server_info()
+        ...         transport_type = client.get_transport_type()
+        ...         print(f"Connected to {server_info} via {transport_type}")
+        ...
+        ...         # List tools with timeout
+        ...         from datetime import timedelta
+        ...         tools = await client.list_tools(timeout=timedelta(seconds=10))
+        ...
+        ...         # Call tool with custom timeout
+        ...         result = await client.call_tool(
+        ...             "analyze_code",
+        ...             {"code": "print('hello')", "language": "python"},
+        ...             timeout=timedelta(seconds=30)
+        ...         )
+        ...         print(f"Analysis result: {result}")
+        ...
+        ...     finally:
+        ...         # Always disconnect
+        ...         await client.disconnect()
+        >>> asyncio.run(manual_connection())
+
+    Complex Configuration (mcpServers format):
+        >>> complex_config = {
+        ...     "mcpServers": {
+        ...         "my-server": {
+        ...             "type": "sse",
+        ...             "url": "https://api.example.com/mcp/sse"
+        ...         }
+        ...     }
+        ... }
+        >>> client = MCPClient(complex_config)  # Will use first server
+
+    Error Handling:
+        >>> async def error_handling_example():
+        ...     config = {"type": "sse", "url": "https://invalid-url.com"}
+        ...     client = MCPClient(config)
+        ...
+        ...     try:
+        ...         await client.connect()
+        ...         result = await client.call_tool("nonexistent_tool", {})
+        ...     except MCPConnectionError as e:
+        ...         print(f"Connection failed: {e}")
+        ...     except MCPToolExecutionError as e:
+        ...         print(f"Tool execution failed: {e}")
+        ...     except MCPTimeoutError as e:
+        ...         print(f"Operation timed out: {e}")
+        ...     except MCPClientError as e:
+        ...         print(f"General MCP error: {e}")
+        ...     finally:
+        ...         await client.disconnect()
+        >>> asyncio.run(error_handling_example())
+
+    Batch Operations:
+        >>> async def batch_operations():
+        ...     config = {"type": "sse", "url": "https://api.example.com/mcp/sse"}
+        ...
+        ...     async with MCPClient(config) as client:
+        ...         # Get all tools first
+        ...         tools = await client.list_tools()
+        ...         tool_names = [tool.name for tool in tools]
+        ...
+        ...         # Call multiple tools
+        ...         results = []
+        ...         for tool_name in tool_names[:3]:  # Limit to first 3 tools
+        ...             try:
+        ...                 result = await client.call_tool(tool_name, {})
+        ...                 results.append((tool_name, result))
+        ...             except Exception as e:
+        ...                 results.append((tool_name, f"Error: {e}"))
+        ...
+        ...         return results
+        >>> results = asyncio.run(batch_operations())
+
+    Server Information Access:
+        >>> async def server_info_example():
+        ...     config = {"type": "sse", "url": "https://api.example.com/mcp/sse"}
+        ...
+        ...     async with MCPClient(config) as client:
+        ...         # Access server details
+        ...         print(f"Server name: {client.get_server_name()}")
+        ...         print(f"Transport: {client.get_transport_type()}")
+        ...         print(f"Connected: {client.is_connected()}")
+        ...
+        ...         server_info = client.get_server_info()
+        ...         if server_info:
+        ...             print(f"Server version: {server_info.get('version')}")
+        ...             print(f"Server implementation: {server_info.get('name')}")
+        >>> asyncio.run(server_info_example())
+
+    Attributes:
+        mcp_server (Dict[str, Any]): Server configuration
+        session (Optional[ClientSession]): MCP session instance
+        exit_stack (Optional[AsyncExitStack]): Resource management stack
+        client_info (Implementation): Client implementation info
+        connected (bool): Connection status
+        read_timeout (timedelta): Default read timeout
+        server_info (Optional[Dict[str, Any]]): Server information
+        server_name (str): Server display name
+
+    Raises:
+        MCPClientError: Base exception for all MCP client errors
+        MCPConnectionError: Connection-related errors
+        MCPToolExecutionError: Tool execution errors
+        MCPTimeoutError: Timeout-related errors
+        ValueError: Invalid configuration or parameters
     """
 
     def __init__(self, mcp_server: Dict[str, Any]):
         """
-        Initialize MCP client
+        Initialize MCP client with server configuration.
 
         Args:
-            mcp_server: MCP server configuration
+            mcp_server (Dict[str, Any]): MCP server configuration dictionary.
+                Supported formats:
+                1. Direct configuration:
+                   {"type": "sse", "url": "https://api.example.com/mcp/sse"}
+                   {"type": "stdio", "command": ["python", "server.py"]}
+                   {"type": "streamable_http", "url": "https://api.example.com/mcp/stream"}
+
+                2. mcpServers nested format:
+                   {"mcpServers": {"server1": {"type": "sse", "url": "..."}}}
+
+        Raises:
+            ValueError: If configuration is invalid or missing required fields.
+
+        Examples:
+            >>> # SSE server configuration
+            >>> sse_config = {
+            ...     "type": "sse",
+            ...     "url": "https://api.example.com/mcp/sse"
+            ... }
+            >>> client = MCPClient(sse_config)
+
+            >>> # STDIO server configuration
+            >>> stdio_config = {
+            ...     "type": "stdio",
+            ...     "command": ["python", "/path/to/mcp_server.py", "--port", "8080"]
+            ... }
+            >>> client = MCPClient(stdio_config)
+
+            >>> # Nested mcpServers format
+            >>> nested_config = {
+            ...     "mcpServers": {
+            ...         "my-server": {
+            ...             "type": "sse",
+            ...             "url": "https://api.example.com/mcp/sse"
+            ...         }
+            ...     }
+            ... }
+            >>> client = MCPClient(nested_config)
         """
         if not mcp_server:
             raise ValueError('MCP server configuration is required')
@@ -98,7 +285,7 @@ class MCPClient:
         # Validate configuration
         self._validate_config()
 
-        # Auto-generate server name (may be updated after connection)
+        # Auto-generate server name (maybe updated after connection)
         self.server_name = self._generate_server_name()
 
     def _generate_server_name(self) -> str:
@@ -117,8 +304,8 @@ class MCPClient:
                 elif isinstance(command, str):
                     return f'stdio-{command}'
 
-            elif transport_type in ['sse', 'streamable_http'
-                                    ] and 'url' in config:
+            elif (transport_type in ['sse', 'streamable_http']
+                  and 'url' in config):
                 # Extract domain from URL
                 url = config['url']
                 try:
@@ -153,32 +340,86 @@ class MCPClient:
                     f'Server configuration for {first_server_name} must be a dictionary'
                 )
 
+            # Auto-detect transport type if not specified
             if 'type' not in first_server_config:
-                raise ValueError(
-                    f'Server type is required for {first_server_name}')
+                if 'command' in first_server_config:
+                    first_server_config['type'] = 'stdio'
+                elif 'url' in first_server_config:
+                    # Default to SSE for URL-based connections
+                    first_server_config['type'] = 'sse'
+                else:
+                    raise ValueError(
+                        f'Server type cannot be determined for {first_server_name}: '
+                        'missing both command and url')
 
-            if 'url' not in first_server_config and 'command' not in first_server_config:
-                raise ValueError(
-                    f'Server URL or command is required for {first_server_name}'
-                )
+            # Validate required fields based on type
+            server_type = first_server_config['type']
+            if server_type == 'stdio':
+                if 'command' not in first_server_config:
+                    raise ValueError(
+                        f'Command is required for stdio server {first_server_name}'
+                    )
+            elif server_type in ['sse', 'streamable_http']:
+                if 'url' not in first_server_config:
+                    raise ValueError(
+                        f'URL is required for {server_type} server {first_server_name}'
+                    )
 
             self.mcp_server = first_server_config
         else:
             # Direct configuration
+            # Auto-detect transport type if not specified
             if 'type' not in config:
-                raise ValueError('Server type is required')
+                if 'command' in config:
+                    config['type'] = 'stdio'
+                elif 'url' in config:
+                    # Default to SSE for URL-based connections
+                    config['type'] = 'sse'
+                else:
+                    raise ValueError(
+                        'Server type cannot be determined: missing both command and url'
+                    )
 
-            if 'url' not in config and 'command' not in config:
-                raise ValueError('Server URL or command is required')
+            # Validate required fields based on type
+            server_type = config['type']
+            if server_type == 'stdio':
+                if 'command' not in config:
+                    raise ValueError('Command is required for stdio server')
+            elif server_type in ['sse', 'streamable_http']:
+                if 'url' not in config:
+                    raise ValueError(
+                        f'URL is required for {server_type} server')
 
             # Validate transport type
-            transport_type = config.get('type')
-            if transport_type not in ['stdio', 'sse', 'streamable_http']:
-                raise ValueError(
-                    f'Unsupported transport type: {transport_type}')
+            if server_type not in ['stdio', 'sse', 'streamable_http']:
+                raise ValueError(f'Unsupported transport type: {server_type}')
 
     async def connect(self) -> None:
-        """Connect to server"""
+        """
+        Establish connection to the MCP server.
+
+        This method creates the appropriate transport (STDIO, SSE, or Streamable HTTP),
+        establishes the session, and performs the MCP initialization handshake.
+
+        Raises:
+            MCPConnectionError: If connection fails for any reason.
+            ValueError: If server configuration is invalid.
+
+        Examples:
+            >>> import asyncio
+            >>> config = {"type": "sse", "url": "https://api.example.com/mcp/sse"}
+            >>> client = MCPClient(config)
+            >>>
+            >>> async def connect_example():
+            ...     try:
+            ...         await client.connect()
+            ...         print(f"Connected to {client.get_server_name()}")
+            ...     except MCPConnectionError as e:
+            ...         print(f"Connection failed: {e}")
+            ...     finally:
+            ...         await client.disconnect()
+            >>> asyncio.run(connect_example())
+        """
         if self.connected:
             logger.warning(f'Already connected to server {self.server_name}')
             return
@@ -266,8 +507,8 @@ class MCPClient:
                 url,
                 timeout=DEFAULT_HTTP_TIMEOUT,
                 sse_read_timeout=DEFAULT_SSE_READ_TIMEOUT))
-        return streamable_http_transport[0], streamable_http_transport[
-            1]  # read, write
+        return (streamable_http_transport[0], streamable_http_transport[1]
+                )  # read, write
 
     def _update_server_info(self, init_result) -> None:
         """Get server information from initialization result and update server name"""
@@ -292,7 +533,9 @@ class MCPClient:
             logger.warning(f'Failed to update server info: {e}')
 
     async def disconnect(self) -> None:
-        """Disconnect from server"""
+        """
+        Disconnect from the MCP server and clean up resources.
+        """
         await self._cleanup()
 
     async def _cleanup(self) -> None:
@@ -321,15 +564,53 @@ class MCPClient:
                         tool_args: Dict[str, Any],
                         timeout: Optional[timedelta] = None) -> str:
         """
-        Call tool
+        Execute a tool on the connected MCP server.
 
         Args:
-            tool_name: Tool name
-            tool_args: Tool arguments
-            timeout: Timeout duration
+            tool_name (str): Name of the tool to execute
+            tool_args (Dict[str, Any]): Arguments to pass to the tool
+            timeout (Optional[timedelta]): Custom timeout for this operation.
+                Defaults to self.read_timeout (30 seconds).
 
         Returns:
-            Tool execution result
+            str: Tool execution result as text. If multiple text content blocks
+                are returned, they are joined with double newlines.
+
+        Raises:
+            MCPConnectionError: If not connected to server or connection lost
+            MCPToolExecutionError: If tool execution fails
+            MCPTimeoutError: If operation times out
+
+        Examples:
+            >>> import asyncio
+            >>> from datetime import timedelta
+            >>> config = {"type": "sse", "url": "https://api.example.com/mcp/sse"}
+            >>>
+            >>> async def call_tool_examples():
+            ...     async with MCPClient(config) as client:
+            ...         # Simple tool call
+            ...         result = await client.call_tool("search", {"query": "Python"})
+            ...         print(f"Search result: {result}")
+            ...
+            ...         # Tool call with custom timeout
+            ...         result = await client.call_tool(
+            ...             "analyze_code",
+            ...             {"code": "def hello(): print('world')", "language": "python"},
+            ...             timeout=timedelta(seconds=60)
+            ...         )
+            ...         print(f"Analysis: {result}")
+            ...
+            ...         # Tool call with complex arguments
+            ...         result = await client.call_tool(
+            ...             "process_data",
+            ...             {
+            ...                 "data": [1, 2, 3, 4, 5],
+            ...                 "operation": "sum",
+            ...                 "options": {"precision": 2}
+            ...             }
+            ...         )
+            ...         print(f"Process result: {result}")
+            >>> asyncio.run(call_tool_examples())
         """
         if not self.connected or not self.session:
             raise MCPConnectionError(
@@ -379,13 +660,21 @@ class MCPClient:
     async def list_tools(self,
                          timeout: Optional[timedelta] = None) -> List[Tool]:
         """
-        Get tool list
+        Retrieve list of available tools from the connected MCP server.
 
         Args:
-            timeout: Timeout duration
+            timeout (Optional[timedelta]): Custom timeout for this operation.
+                Currently not used but reserved for future implementation.
 
         Returns:
-            List of tools
+            List[Tool]: List of Tool objects, each containing:
+                - name (str): Tool name
+                - description (str): Tool description
+                - inputSchema (dict): JSON schema for tool arguments
+
+        Raises:
+            MCPConnectionError: If not connected to server
+            Exception: If request fails for any other reason
         """
         if not self.connected:
             raise MCPConnectionError('Not connected to server')
@@ -399,28 +688,28 @@ class MCPClient:
             raise
 
     def is_connected(self) -> bool:
-        """Check if connected"""
+        """Check if client is currently connected to the MCP server."""
         return self.connected
 
     def get_server_name(self) -> str:
-        """Get server name"""
+        """Get the display name of the connected MCP server."""
         return self.server_name
 
     def get_transport_type(self) -> Optional[str]:
-        """Get transport type"""
+        """Get the transport type used for server communication."""
         return self.mcp_server.get('type')
 
     def get_server_info(self) -> Optional[Dict[str, Any]]:
-        """Get server information"""
+        """Get detailed information about the connected MCP server."""
         return self.server_info
 
     async def __aenter__(self):
-        """Async context manager entry"""
+        """Async context manager entry point."""
         await self.connect()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit"""
+        """Async context manager exit point."""
         await self.disconnect()
 
     def __del__(self):

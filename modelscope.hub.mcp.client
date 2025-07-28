@@ -1,0 +1,18 @@
+2025-07-28 17:14:28,257 - modelscope - INFO - Starting MCP warmup process...
+2025-07-28 17:14:28,513 - modelscope - INFO - 🌐 Loaded 4 servers from ModelScope Hub (remote-only mode)
+2025-07-28 17:14:28,513 - modelscope - INFO - 🌐 Remote-only mode complete: 4 servers loaded
+2025-07-28 17:14:28,513 - modelscope - INFO - Final server count after deduplication: 4
+2025-07-28 17:14:35,888 - modelscope - INFO - Server name updated from "sse-mcp" to "mcp-fetch"
+2025-07-28 17:14:35,889 - modelscope - INFO - Connected to server mcp-fetch
+2025-07-28 17:14:36,025 - modelscope - INFO - Server name updated from "sse-mcp" to "mcp-server-weread"
+2025-07-28 17:14:36,026 - modelscope - INFO - Connected to server mcp-server-weread
+2025-07-28 17:14:36,071 - modelscope - INFO - Server name updated from "sse-mcp" to "mcp-server/amap-maps"
+2025-07-28 17:14:36,071 - modelscope - INFO - Connected to server mcp-server/amap-maps
+2025-07-28 17:14:36,324 - modelscope - INFO - Discovered 1 tools from fetch
+2025-07-28 17:14:36,440 - modelscope - INFO - Discovered 12 tools from amap-maps
+2025-07-28 17:14:36,478 - modelscope - INFO - Discovered 4 tools from mcp-server-weread
+2025-07-28 17:14:40,889 - modelscope - INFO - Server name updated from "sse-mcp" to "12306-mcp"
+2025-07-28 17:14:40,890 - modelscope - INFO - Connected to server 12306-mcp
+2025-07-28 17:14:41,323 - modelscope - INFO - Discovered 8 tools from 12306-mcp
+2025-07-28 17:14:41,324 - modelscope - INFO - MCP warmup completed successfully. Loaded 4 servers with 25 tools total.
+2025-07-28 17:14:41,325 - modelscope - INFO - MCP Manager shutdown completed - all connections closed
