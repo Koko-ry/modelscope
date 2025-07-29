@@ -1206,22 +1206,6 @@ class MCP:
             #     Subtract two numbers
             #     Usage: mcp.call_tools({'name': 'calculator:subtract', 'arguments': {}})
 
-            >>> # Get tool list and find specific tools
-            >>> tools_info = mcp.list_tools()
-            >>> if "weather:" in tools_info:
-            ...     print("Weather tools are available")
-
-            >>> # Parse tool list for automation
-            >>> tools_text = mcp.list_tools()
-            >>> lines = tools_text.split('\n')
-            >>> tool_lines = [line for line in lines if line.strip().startswith('•')]
-            >>> print(f"Found {len(tool_lines)} individual tools")
-
-        Use Cases:
-            >>> # Documentation generation
-            >>> tools_doc = mcp.list_tools()
-            >>> with open('available_tools.md', 'w') as f:
-            ...     f.write(f"# Available MCP Tools\n\n{tools_doc}")
 
             >>> # LLM prompt preparation
             >>> system_prompt = f'''

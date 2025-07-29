@@ -28,7 +28,6 @@ class MCPRequestAdapter:
 
         Args:
             function_call: Original function call
-            framework: Framework hint (ignored in universal mode, kept for compatibility)
 
         Returns:
             Standardized format: {"tool_name": str, "tool_args": dict}
